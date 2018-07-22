@@ -8,12 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace FitnessApp.Data.Entities
 {
     // Add profile data for application users by adding properties to the ApplicationUser class
-    public enum Gender { Male, Female, Other }
-    public enum Visibility {Visible, Unvisible}
+    public enum Gender { Male, Female, Other, None }
     public class ApplicationUser : IdentityUser
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
         public Gender Gender {get;set;}
         public int Age {get;set;}
         public long FacebookId {get;set;}
@@ -23,7 +20,7 @@ namespace FitnessApp.Data.Entities
         public float Weight {get;set;}
         public string PictureUrl { get; set; }
         public bool ProfileComplete {get;set;}
-        public Visibility Visibility {get;set;}
+        public bool Visibility {get;set;}
         public List<Training> Trainings {get;set;}
         public List<UsersGroups> Groups {get;set;}
     }

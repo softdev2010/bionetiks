@@ -10,17 +10,24 @@ namespace FitnessApp.Extensions
     {
         public static UserModel MapToUserModel(this ApplicationUser user)
         {
-            return new UserModel()
-            {
-                Name = user.FirstName + " " + user.LastName,
-                Age = user.Age,
+            var userModel = new UserModel() {
+                Username = user.UserName,
+                Email = user.Email,
                 Nationality = user.Nationality,
-                Gender = user.Gender == Gender.Female ? "Female" : user.Gender == Gender.Male ? "Male" : "Other",
-                Height = user.Height,
-                Weight = user.Weight,
+                Gender = user.Gender == Gender.None ? null : (user.Gender == Gender.Female ? "Female" : user.Gender == Gender.Male ? "Male" : "Other"),
                 ProfileImage = user.PictureUrl,
-                Visibility = user.Visibility == Visibility.Visible ? "Visible" : "Unvisible"
+                Visibility = user.Visibility
             };
+            if(user.Age != 0) {
+                userModel.Age = user.Age;
+            }
+            if(user.Height != 0) {
+                userModel.Height = user.Height;
+            }
+            if(user.Weight != 0) {
+                userModel.Weight = user.Weight;
+            }
+            return userModel;
         }
 
         public static void MapProfileToUser(this ApplicationUser user, ProfileModel profile)
@@ -30,14 +37,6 @@ namespace FitnessApp.Extensions
                 {
                     user.UserName = profile.Username;
                 }
-            }
-            if (profile.FirstName != null)
-            {
-                user.FirstName = profile.FirstName;
-            }
-            if (profile.LastName != null)
-            {
-                user.LastName = profile.LastName;
             }
             if (profile.Nationality != null)
             {

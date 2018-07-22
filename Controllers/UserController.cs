@@ -339,7 +339,7 @@ namespace FitnessApp.Controllers
             try
             {
                 var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName.Equals(this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
-                user.Visibility = user.Visibility == Visibility.Visible ? Visibility.Unvisible : Visibility.Visible;
+                user.Visibility = !user.Visibility;
                 await _context.SaveChangesAsync();
                 return new NoContentResult();
             }

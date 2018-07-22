@@ -53,7 +53,7 @@ namespace FitnessApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Username, Email = model.Email };
+                var user = new ApplicationUser { UserName = model.Username, Email = model.Email, Gender = Gender.None };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -114,8 +114,6 @@ namespace FitnessApp.Controllers
             {
                 var user = new ApplicationUser
                 {
-                    FirstName = userInfo.FirstName,
-                    LastName = userInfo.LastName,
                     FacebookId = userInfo.Id,
                     Email = userInfo.Email,
                     UserName = userInfo.Email,
@@ -162,8 +160,6 @@ namespace FitnessApp.Controllers
             {
                 var user = new ApplicationUser
                 {
-                    FirstName = userInfo.FirstName,
-                    LastName = userInfo.LastName,
                     GoogleId = userInfo.Id,
                     Email = userInfo.Email,
                     UserName = userInfo.Email,
