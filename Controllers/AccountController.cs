@@ -53,7 +53,7 @@ namespace FitnessApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Username, Email = model.Email, Gender = Gender.None };
+                var user = new ApplicationUser { UserName = model.Username, Email = model.Email, Gender = Gender.None, Visibility = true };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -150,7 +150,7 @@ namespace FitnessApp.Controllers
             var appAccessToken = new AppAccessToken();
             var userResponse = await Client.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={googleModel.Code}");
             if(userResponse.StatusCode != HttpStatusCode.OK) {
-                return new BadRequestObjectResult(new {code = "InvalidCode", description = "Google authorization code is not valid."});
+                return new BadRequestObjectResult(new {code = "InvalidCode", description = userResponse.Content.ReadAsStringAsync().Result});
             }
             //appAccessToken = JsonConvert.DeserializeObject<AppAccessToken>(tokenResponse.Content.ReadAsStringAsync().Result);
             //var userResponse = await Client.GetStringAsync($"https://www.googleapis.com/oauth2/v2/userinfo?access_token={appAccessToken.AccessToken}");
