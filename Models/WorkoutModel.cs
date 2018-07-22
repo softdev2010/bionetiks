@@ -8,7 +8,7 @@ namespace FitnessApp.Data.Entities
 {
     public class WorkoutModel
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         [Required]
         public TrainingModel Template {get;set;}
         public int NumberOfRepetitions {get;set;}
@@ -16,7 +16,7 @@ namespace FitnessApp.Data.Entities
         public DateTime Date {get;set;}
         public bool Successfull {get;set;}
         public double AverageRepetitionDuration {get;set;}
-        public double AverageRepetitionAcceleration {get;set;}
+        public double AverageVelocity {get;set;}
         public double AverageTilt {get;set;}
         public List<TimedDouble> AccelerationValues {get;set;}
         public List<TimedDouble> VelocityValues {get;set;}

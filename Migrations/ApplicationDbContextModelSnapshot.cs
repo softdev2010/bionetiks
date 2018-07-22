@@ -92,9 +92,8 @@ namespace FitnessApp.Migrations
 
             modelBuilder.Entity("FitnessApp.Data.Entities.FriendRequest", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("CreatorId");
 
@@ -115,9 +114,8 @@ namespace FitnessApp.Migrations
 
             modelBuilder.Entity("FitnessApp.Data.Entities.Group", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("Name");
 
@@ -128,9 +126,8 @@ namespace FitnessApp.Migrations
 
             modelBuilder.Entity("FitnessApp.Data.Entities.Training", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
 
                     b.Property<int>("Day");
 
@@ -151,7 +148,7 @@ namespace FitnessApp.Migrations
 
             modelBuilder.Entity("FitnessApp.Data.Entities.UsersGroups", b =>
                 {
-                    b.Property<int>("GroupId");
+                    b.Property<Guid>("GroupId");
 
                     b.Property<string>("UserId");
 
@@ -166,9 +163,8 @@ namespace FitnessApp.Migrations
 
             modelBuilder.Entity("FitnessApp.Data.Entities.Workout", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("AccelerationValues");
 
@@ -186,7 +182,9 @@ namespace FitnessApp.Migrations
 
                     b.Property<int>("NumberOfRepetitions");
 
-                    b.Property<int>("TemplateId");
+                    b.Property<string>("TemplateId");
+
+                    b.Property<Guid?>("TemplateId1");
 
                     b.Property<string>("TiltValues");
 
@@ -196,7 +194,7 @@ namespace FitnessApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TemplateId");
+                    b.HasIndex("TemplateId1");
 
                     b.HasIndex("UserId");
 
@@ -348,8 +346,7 @@ namespace FitnessApp.Migrations
                 {
                     b.HasOne("FitnessApp.Data.Entities.Training", "Template")
                         .WithMany("Workouts")
-                        .HasForeignKey("TemplateId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("TemplateId1");
 
                     b.HasOne("FitnessApp.Data.Entities.ApplicationUser", "User")
                         .WithMany()

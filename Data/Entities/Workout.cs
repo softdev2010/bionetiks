@@ -1,11 +1,15 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FitnessApp.Data.Entities
 {
     public class Workout
     {
-        public int Id { get; set; }
-        public int TemplateId {get;set;}
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
+        public Guid Id { get; set; }
+        public string TemplateId {get;set;}
         public Training Template {get;set;}
         public string UserId {get;set;}
         public ApplicationUser User {get;set;}

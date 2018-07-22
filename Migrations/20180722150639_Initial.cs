@@ -26,23 +26,21 @@ namespace FitnessApp.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
+                    AccessFailedCount = table.Column<int>(nullable: false),
+                    EmailConfirmed = table.Column<bool>(nullable: false),
+                    LockoutEnabled = table.Column<bool>(nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(nullable: false),
                     Id = table.Column<string>(nullable: false),
                     UserName = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(maxLength: 256, nullable: true),
                     Email = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(nullable: false),
                     PasswordHash = table.Column<string>(nullable: true),
                     SecurityStamp = table.Column<string>(nullable: true),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
                     PhoneNumber = table.Column<string>(nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
-                    LockoutEnabled = table.Column<bool>(nullable: false),
-                    AccessFailedCount = table.Column<int>(nullable: false),
-                    FirstName = table.Column<string>(nullable: true),
-                    LastName = table.Column<string>(nullable: true),
                     Gender = table.Column<int>(nullable: false),
                     Age = table.Column<int>(nullable: false),
                     FacebookId = table.Column<long>(nullable: false),
@@ -52,11 +50,23 @@ namespace FitnessApp.Migrations
                     Weight = table.Column<float>(nullable: false),
                     PictureUrl = table.Column<string>(nullable: true),
                     ProfileComplete = table.Column<bool>(nullable: false),
-                    Visibility = table.Column<int>(nullable: false)
+                    Visibility = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Groups",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Groups", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -165,6 +175,116 @@ namespace FitnessApp.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "FriendRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    DateSent = table.Column<DateTime>(nullable: false),
+                    CreatorId = table.Column<string>(nullable: true),
+                    TargetUserId = table.Column<string>(nullable: true),
+                    State = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FriendRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FriendRequests_AspNetUsers_CreatorId",
+                        column: x => x.CreatorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_FriendRequests_AspNetUsers_TargetUserId",
+                        column: x => x.TargetUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Trainings",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Day = table.Column<int>(nullable: false),
+                    Weight = table.Column<double>(nullable: false),
+                    MuscleGroup = table.Column<string>(nullable: true),
+                    UserId = table.Column<string>(nullable: true),
+                    IsRoutine = table.Column<bool>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Trainings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Trainings_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UsersGroups",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false),
+                    UserId = table.Column<string>(nullable: false),
+                    GroupId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UsersGroups", x => new { x.GroupId, x.UserId });
+                    table.ForeignKey(
+                        name: "FK_UsersGroups_Groups_GroupId",
+                        column: x => x.GroupId,
+                        principalTable: "Groups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UsersGroups_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Workouts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    TemplateId = table.Column<string>(nullable: true),
+                    TemplateId1 = table.Column<Guid>(nullable: true),
+                    UserId = table.Column<string>(nullable: true),
+                    NumberOfRepetitions = table.Column<int>(nullable: false),
+                    Duration = table.Column<double>(nullable: false),
+                    Date = table.Column<DateTime>(nullable: false),
+                    IsSuccessfull = table.Column<bool>(nullable: false),
+                    AverageRepetitionDuration = table.Column<double>(nullable: false),
+                    AverageRepetitionAcceleration = table.Column<double>(nullable: false),
+                    AverageTilt = table.Column<double>(nullable: false),
+                    AccelerationValues = table.Column<string>(nullable: true),
+                    VelocityValues = table.Column<string>(nullable: true),
+                    TiltValues = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Workouts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Workouts_Trainings_TemplateId1",
+                        column: x => x.TemplateId1,
+                        principalTable: "Trainings",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Workouts_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -203,6 +323,36 @@ namespace FitnessApp.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FriendRequests_CreatorId",
+                table: "FriendRequests",
+                column: "CreatorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FriendRequests_TargetUserId",
+                table: "FriendRequests",
+                column: "TargetUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Trainings_UserId",
+                table: "Trainings",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UsersGroups_UserId",
+                table: "UsersGroups",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Workouts_TemplateId1",
+                table: "Workouts",
+                column: "TemplateId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Workouts_UserId",
+                table: "Workouts",
+                column: "UserId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -223,7 +373,22 @@ namespace FitnessApp.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "FriendRequests");
+
+            migrationBuilder.DropTable(
+                name: "UsersGroups");
+
+            migrationBuilder.DropTable(
+                name: "Workouts");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Groups");
+
+            migrationBuilder.DropTable(
+                name: "Trainings");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

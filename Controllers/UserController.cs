@@ -127,13 +127,13 @@ namespace FitnessApp.Controllers
         }
 
         [HttpGet("groups/{id}")]
-        public async Task<IActionResult> GetUserGroupById(int id)
+        public async Task<IActionResult> GetUserGroupById(string id)
         {
             try
             {
                 var group = await _context.Groups
                                     .Include("Users.User")
-                                    .FirstOrDefaultAsync(x => x.Id == id);
+                                    .FirstOrDefaultAsync(x => x.Id.Equals(id));
 
                 
                 return new OkObjectResult(group.MapGroupToModel());
@@ -171,14 +171,14 @@ namespace FitnessApp.Controllers
         }
 
         [HttpPut("groups/{id}")]
-        public async Task<IActionResult> RenameGroup(int id, [FromBody]CreateGroupModel groupModel)
+        public async Task<IActionResult> RenameGroup(string id, [FromBody]CreateGroupModel groupModel)
         {
             try
             {
                 
                 var group = await _context.Groups
                                     .Include("Users.User")
-                                    .FirstOrDefaultAsync(x => x.Id == id);
+                                    .FirstOrDefaultAsync(x => x.Id.Equals(id));
                 
                 if(group == null) {
                     return NotFound();
@@ -198,24 +198,24 @@ namespace FitnessApp.Controllers
         }
 
         [HttpPut("{userId}/groups/{id}")]
-        public async Task<IActionResult> AddUserToGroup(int id, string userId)
+        public async Task<IActionResult> AddUserToGroup(string id, string userId)
         {
             try
             {
                 var permissionExists = await _context.UsersGroups
                     .Include(x => x.User)
-                    .FirstOrDefaultAsync(x => x.GroupId == id && x.User.UserName.Equals(userId));
+                    .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.User.UserName.Equals(userId));
                 if(permissionExists == null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "NotAllowed", Description = "Action is not allowed."}});
                 }
                 var userExists = await _context.UsersGroups
-                    .FirstOrDefaultAsync(x => x.GroupId == id && x.UserId.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
+                    .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.UserId.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
                 if(userExists != null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "UserExists", Description = "User is already group member."}});
                 }
                 var userGroups = new UsersGroups();
                 userGroups.UserId = userId;
-                userGroups.GroupId = id;
+                userGroups.GroupId = new Guid(id);
                 _context.UsersGroups.Add(userGroups);
                 await _context.SaveChangesAsync();
                 return NoContent();
@@ -227,19 +227,19 @@ namespace FitnessApp.Controllers
         }
 
         [HttpDelete("{userId}/groups/{id}")]
-        public async Task<IActionResult> RemoveUserFromGroup(int id, string userId)
+        public async Task<IActionResult> RemoveUserFromGroup(string id, string userId)
         {
             try
             {
 
                 var permissionExists = await _context.UsersGroups
                     .Include(x => x.User)
-                    .FirstOrDefaultAsync(x => x.GroupId == id && x.User.UserName.Equals(userId));
+                    .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.User.UserName.Equals(userId));
                 if(permissionExists == null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "NotAllowed", Description = "Action is not allowed."}});
                 }
                 var userExists = await _context.UsersGroups
-                                        .FirstOrDefaultAsync(x => x.GroupId == id && x.UserId.Equals(userId));
+                                        .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.UserId.Equals(userId));
                 if(userExists == null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "UserNotFound", Description = "User is not group member."}});
                 }
@@ -349,18 +349,18 @@ namespace FitnessApp.Controllers
             }
         }
         [HttpPatch("requests/{requestId}")]
-        public async Task<IActionResult> RespondToFriendRequest(int requestId, [FromBody] RespondRequestModel respondModel)
+        public async Task<IActionResult> RespondToFriendRequest(string requestId, [FromBody] RespondRequestModel respondModel)
         {
             try
             {
-                if (requestId == 0)
+                if (string.IsNullOrEmpty(requestId) || string.IsNullOrWhiteSpace(requestId))
                 {
                     return BadRequest();
                 }
                 var me = await _context.Users.FirstOrDefaultAsync(x => x.UserName.Equals(this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
 
                 var request = await _context.FriendRequests
-                    .FirstOrDefaultAsync(x => x.Id == requestId);
+                    .FirstOrDefaultAsync(x => x.Id.Equals(requestId));
                 if (request == null)
                 {
                     return NotFound();

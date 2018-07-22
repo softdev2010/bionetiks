@@ -84,7 +84,7 @@ namespace FitnessApp.Extensions
         {
             return new FriendRequestModel()
             {
-                Id = request.Id,
+                Id = request.Id.ToString(),
                 DateSent = request.DateSent,
                 Friend = new FriendModel()
                 {
@@ -100,7 +100,7 @@ namespace FitnessApp.Extensions
             var users = group.Users.Select(x=> x.User);
             return new GroupModel()
             {
-                Id = group.Id,
+                Id = group.Id.ToString(),
                 Name = group.Name,
                 Users = users.Select(x => new FriendModel() {
                     Id = x.Id,

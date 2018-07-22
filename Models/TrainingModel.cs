@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace FitnessApp.Models {
     public class TrainingModel {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public int Day {get;set;}
         public double Weight {get;set;}
         public string MuscleGroup {get;set;}

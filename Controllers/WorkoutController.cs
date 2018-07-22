@@ -55,7 +55,7 @@ namespace FitnessApp.Controllers
                     workout.UserId = workout.User.Id;
                     _context.Workouts.Add(workout);
                     await _context.SaveChangesAsync();
-                    workoutModel.Id = workout.Id;
+                    workoutModel.Id = workout.Id.ToString();
                     return new OkObjectResult(workoutModel);
                 }
                 catch (Exception ex)
@@ -74,7 +74,8 @@ namespace FitnessApp.Controllers
                 var trainings = await _context.Trainings
                     .Include(s => s.User)
                     .AsNoTracking()
-                    .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) && t.IsRoutine)
+                    .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) 
+                        && t.IsRoutine && t.IsDeleted == false)
                     .ToListAsync();
 
                 return new OkObjectResult(trainings.Select(x => x.MapToTrainingModel()));
@@ -85,17 +86,20 @@ namespace FitnessApp.Controllers
             }
         }
 
-        [HttpGet("templates/{id}")]
-        public async Task<IActionResult> GetById(int id)
+        [HttpGet("template/{id}")]
+        public async Task<IActionResult> GetById(string id)
         {
             try
             {
                 var training = await _context.Trainings
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(m => m.Id == id);
+                    .FirstOrDefaultAsync(m => m.Id.Equals(id));
 
                 if (training == null)
                 {
+                    return NotFound();
+                }
+                if(training.IsDeleted) {
                     return NotFound();
                 }
 
@@ -118,7 +122,7 @@ namespace FitnessApp.Controllers
                 training.UserId = training.User.Id;
                 _context.Trainings.Add(training);
                 await _context.SaveChangesAsync();
-                trainingModel.Id = training.Id;
+                trainingModel.Id = training.Id.ToString();
                 return new OkObjectResult(trainingModel);
             }
             catch (Exception ex)
@@ -127,7 +131,7 @@ namespace FitnessApp.Controllers
             }
         }
 
-        [HttpPut("templates")]
+        [HttpPut("template")]
         public async Task<IActionResult> UpdateTrainingTemplate([FromBody]TrainingModel trainingModel)
         {
             try
@@ -136,6 +140,31 @@ namespace FitnessApp.Controllers
                 _context.Entry(training).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
                 return new OkObjectResult(training.MapToTrainingModel());
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        [HttpDelete("template/{id}")]
+        public async Task<IActionResult> DeleteTemplateById(string id)
+        {
+            try
+            {
+                var training = await _context.Trainings
+                    .FirstOrDefaultAsync(m => m.Id.Equals(id));
+
+                if (training == null)
+                {
+                    return NotFound();
+                }
+
+                training.IsDeleted = true;
+
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
             catch (Exception ex)
             {

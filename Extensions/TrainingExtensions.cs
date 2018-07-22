@@ -13,7 +13,7 @@ namespace FitnessApp.Extensions
         {
             return new TrainingModel()
             {
-                Id = training.Id,
+                Id = training.Id.ToString(),
                 Day = (int)training.Day,
                 MuscleGroup = training.MuscleGroup,
                 IsPersonalizedRoutine = training.IsRoutine,
@@ -25,7 +25,7 @@ namespace FitnessApp.Extensions
         {
             return new Training()
             {
-                Id = trainingModel.Id,
+                Id = new Guid(trainingModel.Id),
                 Day = (Days)trainingModel.Day,
                 MuscleGroup = trainingModel.MuscleGroup,
                 IsRoutine = trainingModel.IsPersonalizedRoutine,
@@ -41,23 +41,23 @@ namespace FitnessApp.Extensions
                 NumberOfRepetitions = workoutModel.NumberOfRepetitions,
                 IsSuccessfull = workoutModel.Successfull,
                 AverageRepetitionDuration = workoutModel.AverageRepetitionDuration,
-                AverageRepetitionAcceleration = workoutModel.AverageRepetitionAcceleration,
+                AverageRepetitionAcceleration = workoutModel.AverageVelocity,
                 AverageTilt = workoutModel.AverageTilt
             };
 
             foreach (var value in workoutModel.AccelerationValues)
             {
-                workout.AccelerationValues += value.Duration + "," + value.Time.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
+                workout.AccelerationValues += value.Value + "," + value.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
             }
 
             foreach (var value in workoutModel.VelocityValues)
             {
-                workout.VelocityValues += value.Duration + "," + value.Time.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
+                workout.VelocityValues += value.Value + "," + value.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
             }
 
             foreach (var value in workoutModel.TiltValues)
             {
-                workout.TiltValues += value.Duration + "," + value.Time.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
+                workout.TiltValues += value.Value + "," + value.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
             }
 
             return workout;
@@ -67,14 +67,16 @@ namespace FitnessApp.Extensions
         {
             var workoutModel = new WorkoutModel()
             {
-                Id = workout.Id,
-                Template = workout.Template.MapToTrainingModel(),
+                Id = workout.Id.ToString(),
                 NumberOfRepetitions = workout.NumberOfRepetitions,
                 Successfull = workout.IsSuccessfull,
                 AverageRepetitionDuration = workout.AverageRepetitionDuration,
-                AverageRepetitionAcceleration = workout.AverageRepetitionAcceleration,
+                AverageVelocity = workout.AverageRepetitionAcceleration,
                 AverageTilt = workout.AverageTilt
             };
+            if(!workout.Template.IsDeleted) {
+                workoutModel.Template = workout.Template.MapToTrainingModel();
+            }
             var tmp = workout.AccelerationValues.Split(";");
             workoutModel.AccelerationValues = new List<TimedDouble>();
             foreach (var value in tmp)
@@ -82,7 +84,7 @@ namespace FitnessApp.Extensions
                 if (value != "")
                 {
                     var values = value.Split(",");
-                    workoutModel.AccelerationValues.Add(new TimedDouble() { Duration = Convert.ToDouble(values[0]), Time = DateTime.Parse(values[1]) });
+                    workoutModel.AccelerationValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = DateTime.Parse(values[1]) });
                 }
             }
             tmp = workout.VelocityValues.Split(";");
@@ -92,7 +94,7 @@ namespace FitnessApp.Extensions
                 if (value != "")
                 {
                     var values = value.Split(",");
-                    workoutModel.VelocityValues.Add(new TimedDouble() { Duration = Convert.ToDouble(values[0]), Time = DateTime.Parse(values[1]) });
+                    workoutModel.VelocityValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = DateTime.Parse(values[1]) });
                 }
             }
             tmp = workout.TiltValues.Split(";");
@@ -102,7 +104,7 @@ namespace FitnessApp.Extensions
                 if (value != "")
                 {
                     var values = value.Split(",");
-                    workoutModel.TiltValues.Add(new TimedDouble() { Duration = Convert.ToDouble(values[0]), Time = DateTime.Parse(values[1]) });
+                    workoutModel.TiltValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = DateTime.Parse(values[1]) });
                 }
             }
 
