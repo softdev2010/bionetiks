@@ -25,7 +25,7 @@ namespace FitnessApp.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllWorkouts([FromQuery] bool includeTemplate = true)
+        public async Task<IActionResult> GetAllWorkouts([FromQuery] bool includeWorkoutData = true)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace FitnessApp.Controllers
                     .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value))
                     .ToListAsync();
 
-                return new OkObjectResult(workouts.Select(x => x.MapToWorkoutModel(includeTemplate)));
+                return new OkObjectResult(workouts.Select(x => x.MapToWorkoutModel(includeWorkoutData)));
             }
             catch (Exception ex)
             {
