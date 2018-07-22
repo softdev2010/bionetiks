@@ -89,7 +89,7 @@ namespace FitnessApp.Controllers
                                     .Include(x => x.User)
                                     .Include(x => x.Group)
                                     .Include(x => x.Group.Users)
-                                    .Where(x => x.Group.Name.Equals(searchWord))
+                                    .Where(x => x.Group.Name.ToLower().Contains(searchWord.ToLower()))
                                     .ToListAsync();
 
                 var groups = userGroups.Select(x => x.Group).Select(x => new { Id = x.Id, Name = x.Name});
@@ -133,7 +133,7 @@ namespace FitnessApp.Controllers
             {
                 var group = await _context.Groups
                                     .Include("Users.User")
-                                    .FirstOrDefaultAsync(x => x.Id.Equals(id));
+                                    .FirstOrDefaultAsync(x => x.Id.ToString().Equals(id));
 
                 
                 return new OkObjectResult(group.MapGroupToModel());
@@ -178,7 +178,7 @@ namespace FitnessApp.Controllers
                 
                 var group = await _context.Groups
                                     .Include("Users.User")
-                                    .FirstOrDefaultAsync(x => x.Id.Equals(id));
+                                    .FirstOrDefaultAsync(x => x.Id.ToString().Equals(id));
                 
                 if(group == null) {
                     return NotFound();
@@ -204,12 +204,12 @@ namespace FitnessApp.Controllers
             {
                 var permissionExists = await _context.UsersGroups
                     .Include(x => x.User)
-                    .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.User.UserName.Equals(userId));
+                    .FirstOrDefaultAsync(x => x.GroupId.ToString().Equals(id) && x.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
                 if(permissionExists == null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "NotAllowed", Description = "Action is not allowed."}});
                 }
                 var userExists = await _context.UsersGroups
-                    .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.UserId.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
+                    .FirstOrDefaultAsync(x => x.GroupId.ToString().Equals(id) && x.UserId.Equals(userId));
                 if(userExists != null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "UserExists", Description = "User is already group member."}});
                 }
@@ -234,12 +234,12 @@ namespace FitnessApp.Controllers
 
                 var permissionExists = await _context.UsersGroups
                     .Include(x => x.User)
-                    .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.User.UserName.Equals(userId));
+                    .FirstOrDefaultAsync(x => x.GroupId.ToString().Equals(id) && x.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
                 if(permissionExists == null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "NotAllowed", Description = "Action is not allowed."}});
                 }
                 var userExists = await _context.UsersGroups
-                                        .FirstOrDefaultAsync(x => x.GroupId.Equals(id) && x.UserId.Equals(userId));
+                                        .FirstOrDefaultAsync(x => x.GroupId.ToString().Equals(id) && x.UserId.Equals(userId));
                 if(userExists == null) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "UserNotFound", Description = "User is not group member."}});
                 }
@@ -258,11 +258,11 @@ namespace FitnessApp.Controllers
         {
             try
             {
-                if (userId.Equals(""))
+                if (userId.ToString().Equals(""))
                 {
                     return NotFound();
                 }
-                var friend = await _context.Users.Where(x => x.Id.Equals(userId)).FirstOrDefaultAsync();
+                var friend = await _context.Users.Where(x => x.Id.ToString().Equals(userId)).FirstOrDefaultAsync();
                 if (friend == null)
                 {
                     return NotFound();
@@ -360,15 +360,15 @@ namespace FitnessApp.Controllers
                 var me = await _context.Users.FirstOrDefaultAsync(x => x.UserName.Equals(this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
 
                 var request = await _context.FriendRequests
-                    .FirstOrDefaultAsync(x => x.Id.Equals(requestId));
+                    .FirstOrDefaultAsync(x => x.Id.ToString().Equals(requestId));
                 if (request == null)
                 {
                     return NotFound();
                 }
-                if(request.CreatorId.Equals(me.Id)) {
+                if(request.CreatorId.ToString().Equals(me.Id)) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() { Code = "RequestResponseFailed", Description = "Cannot accept request that is not received." } });
                 }
-                if(!request.TargetUserId.Equals(me.Id)) {
+                if(!request.TargetUserId.ToString().Equals(me.Id)) {
                     return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() { Code = "RequestResponseFailed", Description = "Cannot accept somebody other's request." } });
                 }
                 if (request.State != RequestState.Pending)
@@ -393,7 +393,7 @@ namespace FitnessApp.Controllers
                 {
                     return BadRequest();
                 }
-                var friend = await _context.Users.FirstOrDefaultAsync(x => x.Id.Equals(friendId));
+                var friend = await _context.Users.FirstOrDefaultAsync(x => x.Id.ToString().Equals(friendId));
                 if (friend == null)
                 {
                     return NotFound();
@@ -401,8 +401,8 @@ namespace FitnessApp.Controllers
                 var request = await _context.FriendRequests.Include(x => x.Creator)
                                     .Include(x => x.TargetUser)
                                     .FirstOrDefaultAsync(x => 
-                                        ((x.Creator.UserName.Equals(this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) && x.TargetUserId.Equals(friendId))
-                                            || (x.TargetUser.UserName.Equals(this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) && x.CreatorId.Equals(friendId)))
+                                        ((x.Creator.UserName.Equals(this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) && x.TargetUserId.ToString().Equals(friendId))
+                                            || (x.TargetUser.UserName.Equals(this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) && x.CreatorId.ToString().Equals(friendId)))
                                             && x.State == RequestState.Accepted);
 
                 if(request == null) {

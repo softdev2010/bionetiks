@@ -66,18 +66,21 @@ namespace FitnessApp.Extensions
             return workout;
         }
 
-        public static WorkoutModel MapToWorkoutModel(this Workout workout)
+        public static WorkoutModel MapToWorkoutModel(this Workout workout, bool includeTemplate = true)
         {
             var workoutModel = new WorkoutModel()
             {
                 Id = workout.Id.ToString(),
-                Template = workout.Template.MapToTrainingModel(),
                 NumberOfRepetitions = workout.NumberOfRepetitions,
                 Successfull = workout.IsSuccessfull,
                 AverageRepetitionDuration = workout.AverageRepetitionDuration,
                 AverageVelocity = workout.AverageRepetitionAcceleration,
                 AverageTilt = workout.AverageTilt
             };
+
+            if(includeTemplate) {
+                workoutModel.Template = workout.Template.MapToTrainingModel();
+            }
             var tmp = workout.AccelerationValues.Split(";");
             workoutModel.AccelerationValues = new List<TimedDouble>();
             foreach (var value in tmp)

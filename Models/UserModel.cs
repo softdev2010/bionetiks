@@ -9,6 +9,8 @@ namespace FitnessApp.Models
         public int? Age {get;set;}
         public string Nationality {get;set;}
         public float? Height {get;set;}
+        public double? Latitude {get;set;}
+        public double? Longitude {get;set;}
         public float? Weight {get;set;}
         public string ProfileImage { get; set; }
         public bool Visibility { get; set; }

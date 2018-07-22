@@ -34,6 +34,14 @@ namespace FitnessApp.Extensions
             {
                 userModel.Weight = user.Weight;
             }
+            if (user.Latitude != 0)
+            {
+                userModel.Latitude = user.Latitude;
+            }
+            if (user.Longitude != 0)
+            {
+                userModel.Longitude = user.Longitude;
+            }
             return userModel;
         }
 
@@ -61,6 +69,16 @@ namespace FitnessApp.Extensions
             if (profile.Age != 0)
             {
                 user.Age = profile.Age;
+            }
+            
+            if (profile.Latitude != 0)
+            {
+                user.Latitude = profile.Latitude;
+            }
+            
+            if (profile.Longitude != 0)
+            {
+                user.Longitude = profile.Longitude;
             }
             if (profile.Gender != null)
             {
