@@ -23,21 +23,24 @@ namespace FitnessApp.Extensions
 
         public static Training MapToTraining(this TrainingModel trainingModel)
         {
-            return new Training()
-            {
-                Id = new Guid(trainingModel.Id),
+            var training = new Training() {
                 Day = (Days)trainingModel.Day,
                 MuscleGroup = trainingModel.MuscleGroup,
                 IsRoutine = trainingModel.IsPersonalizedRoutine,
                 Weight = trainingModel.Weight
             };
+            if(trainingModel.Id != null) {
+                training.Id = new Guid(trainingModel.Id);
+            } 
+            return training;
+            
         }
 
         public static Workout MapToWorkout(this WorkoutModel workoutModel)
         {
             var workout = new Workout()
             {
-                TemplateId = workoutModel.Template.Id,
+                TemplateId = new Guid(workoutModel.Template.Id),
                 NumberOfRepetitions = workoutModel.NumberOfRepetitions,
                 IsSuccessfull = workoutModel.Successfull,
                 AverageRepetitionDuration = workoutModel.AverageRepetitionDuration,
@@ -68,15 +71,13 @@ namespace FitnessApp.Extensions
             var workoutModel = new WorkoutModel()
             {
                 Id = workout.Id.ToString(),
+                Template = workout.Template.MapToTrainingModel(),
                 NumberOfRepetitions = workout.NumberOfRepetitions,
                 Successfull = workout.IsSuccessfull,
                 AverageRepetitionDuration = workout.AverageRepetitionDuration,
                 AverageVelocity = workout.AverageRepetitionAcceleration,
                 AverageTilt = workout.AverageTilt
             };
-            if(!workout.Template.IsDeleted) {
-                workoutModel.Template = workout.Template.MapToTrainingModel();
-            }
             var tmp = workout.AccelerationValues.Split(";");
             workoutModel.AccelerationValues = new List<TimedDouble>();
             foreach (var value in tmp)

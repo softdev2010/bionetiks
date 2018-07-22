@@ -9,7 +9,7 @@ namespace FitnessApp.Data.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public Guid Id { get; set; }
-        public string TemplateId {get;set;}
+        public Guid TemplateId {get;set;}
         public Training Template {get;set;}
         public string UserId {get;set;}
         public ApplicationUser User {get;set;}

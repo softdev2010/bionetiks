@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FitnessApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180722150639_Initial")]
+    [Migration("20180722154130_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,9 +46,13 @@ namespace FitnessApp.Migrations
 
                     b.Property<float>("Height");
 
+                    b.Property<double>("Latitude");
+
                     b.Property<bool>("LockoutEnabled");
 
                     b.Property<DateTimeOffset?>("LockoutEnd");
+
+                    b.Property<double>("Longitude");
 
                     b.Property<string>("Nationality");
 
@@ -133,6 +137,8 @@ namespace FitnessApp.Migrations
 
                     b.Property<int>("Day");
 
+                    b.Property<bool>("IsDeleted");
+
                     b.Property<bool>("IsRoutine");
 
                     b.Property<string>("MuscleGroup");
@@ -184,9 +190,7 @@ namespace FitnessApp.Migrations
 
                     b.Property<int>("NumberOfRepetitions");
 
-                    b.Property<string>("TemplateId");
-
-                    b.Property<Guid?>("TemplateId1");
+                    b.Property<Guid>("TemplateId");
 
                     b.Property<string>("TiltValues");
 
@@ -196,7 +200,7 @@ namespace FitnessApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TemplateId1");
+                    b.HasIndex("TemplateId");
 
                     b.HasIndex("UserId");
 
@@ -348,7 +352,8 @@ namespace FitnessApp.Migrations
                 {
                     b.HasOne("FitnessApp.Data.Entities.Training", "Template")
                         .WithMany("Workouts")
-                        .HasForeignKey("TemplateId1");
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("FitnessApp.Data.Entities.ApplicationUser", "User")
                         .WithMany()

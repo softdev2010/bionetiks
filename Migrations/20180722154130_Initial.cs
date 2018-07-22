@@ -46,6 +46,8 @@ namespace FitnessApp.Migrations
                     FacebookId = table.Column<long>(nullable: false),
                     GoogleId = table.Column<string>(nullable: true),
                     Nationality = table.Column<string>(nullable: true),
+                    Latitude = table.Column<double>(nullable: false),
+                    Longitude = table.Column<double>(nullable: false),
                     Height = table.Column<float>(nullable: false),
                     Weight = table.Column<float>(nullable: false),
                     PictureUrl = table.Column<string>(nullable: true),
@@ -211,7 +213,8 @@ namespace FitnessApp.Migrations
                     Weight = table.Column<double>(nullable: false),
                     MuscleGroup = table.Column<string>(nullable: true),
                     UserId = table.Column<string>(nullable: true),
-                    IsRoutine = table.Column<bool>(nullable: false)
+                    IsRoutine = table.Column<bool>(nullable: false),
+                    IsDeleted = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -254,8 +257,7 @@ namespace FitnessApp.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    TemplateId = table.Column<string>(nullable: true),
-                    TemplateId1 = table.Column<Guid>(nullable: true),
+                    TemplateId = table.Column<Guid>(nullable: false),
                     UserId = table.Column<string>(nullable: true),
                     NumberOfRepetitions = table.Column<int>(nullable: false),
                     Duration = table.Column<double>(nullable: false),
@@ -272,11 +274,11 @@ namespace FitnessApp.Migrations
                 {
                     table.PrimaryKey("PK_Workouts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Workouts_Trainings_TemplateId1",
-                        column: x => x.TemplateId1,
+                        name: "FK_Workouts_Trainings_TemplateId",
+                        column: x => x.TemplateId,
                         principalTable: "Trainings",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Workouts_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -345,9 +347,9 @@ namespace FitnessApp.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Workouts_TemplateId1",
+                name: "IX_Workouts_TemplateId",
                 table: "Workouts",
-                column: "TemplateId1");
+                column: "TemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Workouts_UserId",

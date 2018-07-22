@@ -93,7 +93,7 @@ namespace FitnessApp.Controllers
             {
                 var training = await _context.Trainings
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(m => m.Id.Equals(id));
+                    .FirstOrDefaultAsync(m => m.Id.ToString().Equals(id));
 
                 if (training == null)
                 {
@@ -153,7 +153,7 @@ namespace FitnessApp.Controllers
             try
             {
                 var training = await _context.Trainings
-                    .FirstOrDefaultAsync(m => m.Id.Equals(id));
+                    .FirstOrDefaultAsync(m => m.Id.ToString().Equals(id));
 
                 if (training == null)
                 {

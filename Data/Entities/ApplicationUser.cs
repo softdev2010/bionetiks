@@ -16,6 +16,8 @@ namespace FitnessApp.Data.Entities
         public long FacebookId {get;set;}
         public string GoogleId {get;set;}
         public string Nationality {get;set;}
+        public double Latitude {get;set;}
+        public double Longitude {get;set;}
         public float Height {get;set;}
         public float Weight {get;set;}
         public string PictureUrl { get; set; }
