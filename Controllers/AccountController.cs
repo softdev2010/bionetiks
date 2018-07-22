@@ -21,6 +21,7 @@ using FitnessApp.Data;
 using FitnessApp.Models.Account;
 using FitnessApp.Data.Entities;
 using System.Net;
+using FitnessApp.Extensions;
 
 namespace FitnessApp.Controllers
 {
@@ -116,20 +117,25 @@ namespace FitnessApp.Controllers
                 {
                     FacebookId = userInfo.Id,
                     Email = userInfo.Email,
-                    UserName = userInfo.Email,
-                    PictureUrl = userInfo.Picture?.Data?.Url
+                    UserName = userInfo.FirstName + userInfo.LastName,
+                    PictureUrl = userInfo.Picture?.Data?.Url,
+                    Visibility = true
                 };
 
                 if(userInfo.Gender != null)
                     user.Gender = userInfo.Gender.Equals("male") ? Gender.Male : userInfo.Gender.Equals("female") ? Gender.Female : Gender.Other;
-                    
-                var dateOfBirth = new DateTime(day: userInfo.Birthday.Day, month: userInfo.Birthday.Month, year:DateTime.Now.Year);
-                if(DateTime.Now >= dateOfBirth) {
-                    user.Age = DateTime.Now.Year - userInfo.Birthday.Year;
-                } else {
-                    user.Age = DateTime.Now.Year - userInfo.Birthday.Year - 1;
-                } 
-
+                else 
+                    user.Gender = Gender.None;
+                if(userInfo.Birthday != DateTime.MinValue) {
+                    var dateOfBirth = new DateTime(day: userInfo.Birthday.Day, month: userInfo.Birthday.Month, year:DateTime.Now.Year);
+                    if(DateTime.Now >= dateOfBirth) {
+                        user.Age = DateTime.Now.Year - userInfo.Birthday.Year;
+                    } else {
+                        user.Age = DateTime.Now.Year - userInfo.Birthday.Year - 1;
+                    }
+                }
+                 
+                user.UserName = UserExtensions.RemoveDiacritics(user.UserName);
                 var result = await _userManager.CreateAsync(user, Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Substring(0, 8));
                 if (!result.Succeeded) {
                     return new BadRequestObjectResult(result.Errors);
@@ -162,12 +168,16 @@ namespace FitnessApp.Controllers
                 {
                     GoogleId = userInfo.Id,
                     Email = userInfo.Email,
-                    UserName = userInfo.Email,
-                    PictureUrl = userInfo.Picture
+                    UserName = userInfo.FirstName + userInfo.LastName,
+                    PictureUrl = userInfo.Picture,
+                    Visibility = true
                 };
                 if(userInfo.Gender != null)
                     user.Gender = userInfo.Gender.Equals("male") ? Gender.Male : userInfo.Gender.Equals("female") ? Gender.Female : Gender.Other;
+                else 
+                    user.Gender = Gender.None;
 
+                user.UserName = UserExtensions.RemoveDiacritics(user.UserName);
                 var result = await _userManager.CreateAsync(user, Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Substring(0, 8));
                 if (!result.Succeeded) {
                     return new BadRequestObjectResult(result.Errors);

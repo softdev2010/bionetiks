@@ -1,4 +1,7 @@
+using System;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using FitnessApp.Data;
 using FitnessApp.Data.Entities;
 using FitnessApp.Models;
@@ -10,7 +13,8 @@ namespace FitnessApp.Extensions
     {
         public static UserModel MapToUserModel(this ApplicationUser user)
         {
-            var userModel = new UserModel() {
+            var userModel = new UserModel()
+            {
                 Username = user.UserName,
                 Email = user.Email,
                 Nationality = user.Nationality,
@@ -18,13 +22,16 @@ namespace FitnessApp.Extensions
                 ProfileImage = user.PictureUrl,
                 Visibility = user.Visibility
             };
-            if(user.Age != 0) {
+            if (user.Age != 0)
+            {
                 userModel.Age = user.Age;
             }
-            if(user.Height != 0) {
+            if (user.Height != 0)
+            {
                 userModel.Height = user.Height;
             }
-            if(user.Weight != 0) {
+            if (user.Weight != 0)
+            {
                 userModel.Weight = user.Weight;
             }
             return userModel;
@@ -32,7 +39,8 @@ namespace FitnessApp.Extensions
 
         public static void MapProfileToUser(this ApplicationUser user, ProfileModel profile)
         {
-            if(profile.Username != null) {
+            if (profile.Username != null)
+            {
                 if (!profile.Username.Equals(user.UserName) && user.UserName.Equals(user.Email))
                 {
                     user.UserName = profile.Username;
@@ -68,9 +76,12 @@ namespace FitnessApp.Extensions
         {
             ApplicationUser user = null;
 
-            if(request.Creator.UserName.Equals(username)) {
+            if (request.Creator.UserName.Equals(username))
+            {
                 user = request.TargetUser;
-            } else if(request.TargetUser.UserName.Equals(username)) {
+            }
+            else if (request.TargetUser.UserName.Equals(username))
+            {
                 user = request.Creator;
             }
             return new FriendModel()
@@ -97,17 +108,33 @@ namespace FitnessApp.Extensions
 
         public static GroupModel MapGroupToModel(this Group group)
         {
-            var users = group.Users.Select(x=> x.User);
+            var users = group.Users.Select(x => x.User);
             return new GroupModel()
             {
                 Id = group.Id.ToString(),
                 Name = group.Name,
-                Users = users.Select(x => new FriendModel() {
+                Users = users.Select(x => new FriendModel()
+                {
                     Id = x.Id,
                     Username = x.UserName,
                     ProfileImage = x.PictureUrl
                 }).ToList()
             };
+        }
+
+        public static String RemoveDiacritics(String s)
+        {
+            String normalizedString = s.Normalize(NormalizationForm.FormD);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            for (int i = 0; i < normalizedString.Length; i++)
+            {
+                Char c = normalizedString[i];
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                    stringBuilder.Append(c);
+            }
+
+            return stringBuilder.ToString();
         }
     }
 }
