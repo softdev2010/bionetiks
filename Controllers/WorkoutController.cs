@@ -66,7 +66,7 @@ namespace FitnessApp.Controllers
             return new BadRequestObjectResult(ModelState.Values.Select(x => x.Errors));
         }
 
-        [HttpGet("routines")]
+        [HttpGet("templates")]
         public async Task<IActionResult> GetAllPersonalizedRoutines()
         {
             try
@@ -85,7 +85,7 @@ namespace FitnessApp.Controllers
             }
         }
 
-        [HttpGet("template/{id}")]
+        [HttpGet("templates/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -107,7 +107,7 @@ namespace FitnessApp.Controllers
             }
         }
 
-        [HttpPost("template")]
+        [HttpPost("templates")]
         public async Task<IActionResult> CreateTrainingTemplate([FromBody]TrainingModel trainingModel)
         {
             try
@@ -127,7 +127,7 @@ namespace FitnessApp.Controllers
             }
         }
 
-        [HttpPut("template")]
+        [HttpPut("templates")]
         public async Task<IActionResult> UpdateTrainingTemplate([FromBody]TrainingModel trainingModel)
         {
             try
