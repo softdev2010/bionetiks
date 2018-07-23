@@ -141,7 +141,7 @@ namespace FitnessApp.Controllers
                     return new BadRequestObjectResult(result.Errors);
                 }
                 else {
-                    existingUser = await _userManager.FindByNameAsync(userInfo.Email);
+                    existingUser = await _userManager.FindByNameAsync(user.UserName);
                 }
             }
 
@@ -153,19 +153,19 @@ namespace FitnessApp.Controllers
 
         [HttpPost("externalauth/google")]
         public async Task<IActionResult> Google([FromBody] GoogleModel googleModel) {
-            var appAccessToken = new AppAccessToken();
-            var userResponse = await Client.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={googleModel.Code}");
-            if(userResponse.StatusCode != HttpStatusCode.OK) {
-                return new BadRequestObjectResult(new {code = "InvalidCode", description = userResponse.Content.ReadAsStringAsync().Result});
+            var appAccessToken = new AppAccessToken(); 
+            var tokenResponse = await Client.PostAsync($"https://www.googleapis.com/oauth2/v2/token?code={googleModel.Code}&client_id={_googleAuthModel.ClientId}&client_secret={_googleAuthModel.ClientSecret}&redirect_uri=http://localhost/oauth2callback&grant_type=authorization_code", null); 
+            if(tokenResponse.StatusCode != HttpStatusCode.OK) { 
+                return new BadRequestObjectResult(new {code = "InvalidCode", description = tokenResponse.Content.ReadAsStringAsync().Result});// "Google authorization code is not valid."}); 
             }
-            //appAccessToken = JsonConvert.DeserializeObject<AppAccessToken>(tokenResponse.Content.ReadAsStringAsync().Result);
-            //var userResponse = await Client.GetStringAsync($"https://www.googleapis.com/oauth2/v2/userinfo?access_token={appAccessToken.AccessToken}");
-            var userInfo = JsonConvert.DeserializeObject<GoogleUserData>(userResponse.Content.ReadAsStringAsync().Result);
-            var existingUser = await _userManager.FindByEmailAsync(userInfo.Email);
+            appAccessToken = JsonConvert.DeserializeObject<AppAccessToken>(tokenResponse.Content.ReadAsStringAsync().Result); 
+            var userResponse = await Client.GetStringAsync($"https://www.googleapis.com/oauth2/v2/userinfo?access_token={appAccessToken.AccessToken}"); 
+            var userInfo = JsonConvert.DeserializeObject<GoogleUserData>(userResponse); 
+            var existingUser = await _userManager.FindByEmailAsync(userInfo.Email); 
             if (existingUser == null)
             {
                 var user = new ApplicationUser
-                {
+                { 
                     GoogleId = userInfo.Id,
                     Email = userInfo.Email,
                     UserName = userInfo.FirstName + userInfo.LastName,

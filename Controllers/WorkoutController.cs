@@ -86,7 +86,7 @@ namespace FitnessApp.Controllers
             }
         }
 
-        [HttpGet("template/{id}")]
+        [HttpGet("templates/{id}")]
         public async Task<IActionResult> GetById(string id)
         {
             try
@@ -132,7 +132,7 @@ namespace FitnessApp.Controllers
             }
         }
 
-        [HttpPut("template")]
+        [HttpPut("templates")]
         public async Task<IActionResult> UpdateTrainingTemplate([FromBody]TrainingModel trainingModel)
         {
             try
