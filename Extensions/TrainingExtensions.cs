@@ -90,7 +90,7 @@ namespace FitnessApp.Extensions
                     if (value != "")
                     {
                         var values = value.Split(",");
-                        workoutModel.AccelerationValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = DateTime.Parse(values[1]) });
+                        workoutModel.AccelerationValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp =  Convert.ToDouble(values[1]) });
                     }
                 }
                 tmp = workout.VelocityValues.Split(";");
@@ -100,7 +100,7 @@ namespace FitnessApp.Extensions
                     if (value != "")
                     {
                         var values = value.Split(",");
-                        workoutModel.VelocityValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = DateTime.Parse(values[1]) });
+                        workoutModel.VelocityValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp =  Convert.ToDouble(values[1]) });
                     }
                 }
                 tmp = workout.TiltValues.Split(";");
@@ -110,7 +110,7 @@ namespace FitnessApp.Extensions
                     if (value != "")
                     {
                         var values = value.Split(",");
-                        workoutModel.TiltValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = DateTime.Parse(values[1]) });
+                        workoutModel.TiltValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = Convert.ToDouble(values[1]) });
                     }
                 }
             }

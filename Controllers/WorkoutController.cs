@@ -137,8 +137,11 @@ namespace FitnessApp.Controllers
         {
             try
             {
-                var training = trainingModel.MapToTraining();
-                _context.Entry(training).State = EntityState.Modified;
+                var training = await _context.Trainings.FirstOrDefaultAsync(x => x.Id.ToString().Equals(trainingModel.Id));
+                training.IsRoutine = trainingModel.IsPersonalizedRoutine;
+                training.MuscleGroup = trainingModel.MuscleGroup;
+                training.Day = (Days)trainingModel.Day;
+                training.Weight = trainingModel.Weight;
                 await _context.SaveChangesAsync();
                 return new OkObjectResult(training.MapToTrainingModel());
             }

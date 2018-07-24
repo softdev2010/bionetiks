@@ -39,10 +39,44 @@ namespace FitnessApp.Controllers
         [HttpGet("search/{searchWord}")]
         public async Task<IActionResult> SearchUsers(string searchWord)
         {
-            var users = await _context.Users.Where(x => x.UserName.ToLower().Contains(searchWord.ToLower())).ToListAsync();
-            return new OkObjectResult(users);
+            var users = await _context.Users
+                .Where(x => x.UserName.ToLower().Contains(searchWord.ToLower())).ToListAsync();
+            var userModels = users.Select(x => x.MapToFriendUserModel(0)).ToList();
+            var loggedUser = this.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
+            foreach(var user in userModels) {
+                var friendStatuses = await _context.FriendRequests
+                                    .Include(x => x.Creator)
+                                    .Include(x => x.TargetUser)
+                                    .Where(x => ((x.CreatorId.ToString().Equals(user.Id) &&
+                                                x.TargetUser.UserName.Equals(loggedUser)) ||
+                                            (x.TargetUserId.ToString().Equals(user.Id) &&
+                                            x.Creator.UserName.Equals(loggedUser))) &&
+                                            x.State != RequestState.Denied)
+                                    .ToListAsync();
+            
+                if(friendStatuses.Count == 0) {
+                    user.FriendStatus = FriendStatus.NotFriends;
+                } else {
+                    var receivedRequestExists = friendStatuses
+                        .FirstOrDefault(x => x.CreatorId.ToString().Equals(user.Id) &&
+                        x.TargetUser.UserName.Equals(loggedUser) && x.State == RequestState.Pending);
+                    if(receivedRequestExists != null) {
+                        user.FriendStatus = FriendStatus.FriendRequestReceived;
+                    } else {
+                        var sentRequestExists = friendStatuses
+                            .FirstOrDefault(x => x.TargetUserId.ToString().Equals(user.Id) &&
+                                x.Creator.UserName.Equals(loggedUser) && x.State == RequestState.Pending);
+                        if(sentRequestExists != null) {
+                            user.FriendStatus = FriendStatus.FriendRequestSent;
+                        } else {
+                            user.FriendStatus = FriendStatus.Friends;
+                        }
+                    }
+                }
+            }
+            return new OkObjectResult(userModels);
         }
-
+ 
         [HttpGet("friends")]
         public async Task<IActionResult> GetFriends()
         {
@@ -53,7 +87,7 @@ namespace FitnessApp.Controllers
                                         (x.Creator.UserName.Equals(username) || x.TargetUser.UserName.Equals(username))
                                         && x.State == RequestState.Accepted)
                                     .ToListAsync();
-            return new OkObjectResult(friends.Select(x => x.MapToFriendModel(username)));
+            return new OkObjectResult(friends.Select(x => x.MapToFriendModel(username, 3)));
         }
 
         [HttpGet("requests/incoming")]
@@ -65,7 +99,7 @@ namespace FitnessApp.Controllers
                                     .Where(x => x.TargetUser.UserName.Equals(username)
                                         && x.State == RequestState.Pending)
                                     .ToListAsync();
-            return new OkObjectResult(requests.Select(x => x.MapRequestToModel(x.Creator)));
+            return new OkObjectResult(requests.Select(x => x.MapRequestToModel(x.Creator, false)));
         }
 
         [HttpGet("requests/outgoing")]
@@ -77,7 +111,7 @@ namespace FitnessApp.Controllers
                                     .Where(x => x.Creator.UserName.Equals(username)
                                         && x.State == RequestState.Pending)
                                     .ToListAsync();
-            return new OkObjectResult(requests.Select(x => x.MapRequestToModel(x.TargetUser)));
+            return new OkObjectResult(requests.Select(x => x.MapRequestToModel(x.TargetUser, true)));
         }
 
         [HttpGet("groups/{searchWord}/search")]
@@ -116,7 +150,7 @@ namespace FitnessApp.Controllers
                                     .Where(x => x.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value))
                                     .ToListAsync();
 
-                var groups = userGroups.Select(x => x.Group.MapGroupToModel());
+                var groups = userGroups.Select(x => x.Group.MapGroupToModel(_context, User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
                 
                 return new OkObjectResult(groups);
             }
@@ -136,7 +170,7 @@ namespace FitnessApp.Controllers
                                     .FirstOrDefaultAsync(x => x.Id.ToString().Equals(id));
 
                 
-                return new OkObjectResult(group.MapGroupToModel());
+                return new OkObjectResult(group.MapGroupToModel(_context, User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
             }
             catch (Exception ex)
             {
@@ -162,7 +196,7 @@ namespace FitnessApp.Controllers
                 _context.UsersGroups.Add(userGroups);
                 await _context.SaveChangesAsync();
                 group.Users = new List<UsersGroups>() { userGroups };
-                return new OkObjectResult(group.MapGroupToModel());
+                return new OkObjectResult(group.MapGroupToModel(_context, User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
             }
             catch (Exception ex)
             {
