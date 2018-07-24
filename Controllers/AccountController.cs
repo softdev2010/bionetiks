@@ -154,7 +154,7 @@ namespace FitnessApp.Controllers
         [HttpPost("externalauth/google")]
         public async Task<IActionResult> Google([FromBody] GoogleModel googleModel) {
             var appAccessToken = new AppAccessToken(); 
-            var tokenResponse = await Client.PostAsync($"https://www.googleapis.com/oauth2/v2/token?code={googleModel.Code}&client_id={_googleAuthModel.ClientId}&client_secret={_googleAuthModel.ClientSecret}&redirect_uri=http://localhost/oauth2callback&grant_type=authorization_code", null); 
+            var tokenResponse = await Client.PostAsync($"https://www.googleapis.com/oauth2/v4/token?code={googleModel.Code}&client_id={_googleAuthModel.ClientId}&client_secret={_googleAuthModel.ClientSecret}&redirect_uri=http://localhost/oauth2callback&grant_type=authorization_code", null); 
             if(tokenResponse.StatusCode != HttpStatusCode.OK) { 
                 return new BadRequestObjectResult(new {code = "InvalidCode", description = tokenResponse.Content.ReadAsStringAsync().Result});// "Google authorization code is not valid."}); 
             }
