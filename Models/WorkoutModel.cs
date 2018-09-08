@@ -11,6 +11,7 @@ namespace FitnessApp.Data.Entities
         public string Id { get; set; }
         [Required]
         public TrainingModel Template {get;set;}
+        public UserModel User {get;set;}
         public int NumberOfRepetitions {get;set;}
         public double Duration {get;set;}
         public DateTime Date {get;set;}

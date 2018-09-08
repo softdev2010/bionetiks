@@ -11,6 +11,7 @@ namespace FitnessApp.Models.Account
         public float Height {get;set;}
         public float Weight {get;set;}
         public string Nationality {get;set;}
+        public bool? Professional {get;set;}
         public string PictureUrl { get; set; }
         public bool? ProfileComplete {get;set;}
         public double Latitude {get;set;}

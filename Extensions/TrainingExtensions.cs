@@ -17,7 +17,8 @@ namespace FitnessApp.Extensions
                 Day = (int)training.Day,
                 MuscleGroup = training.MuscleGroup,
                 IsPersonalizedRoutine = training.IsRoutine,
-                Weight = training.Weight
+                Weight = training.Weight,
+                OptimalWeight = training.OptimalWeight
             };
         }
 
@@ -27,8 +28,25 @@ namespace FitnessApp.Extensions
             {
                 Day = (Days)trainingModel.Day,
                 MuscleGroup = trainingModel.MuscleGroup,
-                IsRoutine = trainingModel.IsPersonalizedRoutine,
-                Weight = trainingModel.Weight
+                Weight = trainingModel.Weight,
+                IsRoutine = trainingModel.IsPersonalizedRoutine
+            };
+            if (trainingModel.Id != null)
+            {
+                training.Id = new Guid(trainingModel.Id);
+            }
+            return training;
+
+        }
+
+        public static Training MapToTraining(this CreateTrainingModel trainingModel)
+        {
+            var training = new Training()
+            {
+                Day = (Days)trainingModel.Day,
+                MuscleGroup = trainingModel.MuscleGroup,
+                Weight = trainingModel.Weight,
+                IsRoutine = trainingModel.IsPersonalizedRoutine
             };
             if (trainingModel.Id != null)
             {
@@ -47,22 +65,56 @@ namespace FitnessApp.Extensions
                 IsSuccessfull = workoutModel.Successfull,
                 AverageRepetitionDuration = workoutModel.AverageRepetitionDuration,
                 AverageRepetitionAcceleration = workoutModel.AverageVelocity,
-                AverageTilt = workoutModel.AverageTilt
+                AverageTilt = workoutModel.AverageTilt,
+                Date = workoutModel.Date,
+                Duration = workoutModel.Duration
             };
 
             foreach (var value in workoutModel.AccelerationValues)
             {
-                workout.AccelerationValues += value.Value + "," + value.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
+                workout.AccelerationValues += value.Value + "," + value.Timestamp + ";";
             }
 
             foreach (var value in workoutModel.VelocityValues)
             {
-                workout.VelocityValues += value.Value + "," + value.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
+                workout.VelocityValues += value.Value + "," + value.Timestamp + ";";
             }
 
             foreach (var value in workoutModel.TiltValues)
             {
-                workout.TiltValues += value.Value + "," + value.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ") + ";";
+                workout.TiltValues += value.Value + "," + value.Timestamp + ";";
+            }
+
+            return workout;
+        }
+
+        public static Workout MapToWorkout(this CreateWorkoutModel workoutModel)
+        {
+            var workout = new Workout()
+            {
+                TemplateId = new Guid(workoutModel.Template.Id),
+                NumberOfRepetitions = workoutModel.NumberOfRepetitions,
+                IsSuccessfull = workoutModel.Successfull,
+                AverageRepetitionDuration = workoutModel.AverageRepetitionDuration,
+                AverageRepetitionAcceleration = workoutModel.AverageVelocity,
+                AverageTilt = workoutModel.AverageTilt,
+                Date = workoutModel.Date,
+                Duration = workoutModel.Duration
+            };
+
+            foreach (var value in workoutModel.AccelerationValues)
+            {
+                workout.AccelerationValues += value.Value + "," + value.Timestamp + ";";
+            }
+
+            foreach (var value in workoutModel.VelocityValues)
+            {
+                workout.VelocityValues += value.Value + "," + value.Timestamp + ";";
+            }
+
+            foreach (var value in workoutModel.TiltValues)
+            {
+                workout.TiltValues += value.Value + "," + value.Timestamp + ";";
             }
 
             return workout;
@@ -74,11 +126,14 @@ namespace FitnessApp.Extensions
             {
                 Id = workout.Id.ToString(),
                 Template = workout.Template.MapToTrainingModel(),
+                User = workout.User.MapToUserModel(),
                 NumberOfRepetitions = workout.NumberOfRepetitions,
                 Successfull = workout.IsSuccessfull,
                 AverageRepetitionDuration = workout.AverageRepetitionDuration,
                 AverageVelocity = workout.AverageRepetitionAcceleration,
-                AverageTilt = workout.AverageTilt
+                AverageTilt = workout.AverageTilt,
+                Date = workout.Date,
+                Duration = workout.Duration
             };
 
             if (includeWorkoutData)
@@ -90,7 +145,7 @@ namespace FitnessApp.Extensions
                     if (value != "")
                     {
                         var values = value.Split(",");
-                        workoutModel.AccelerationValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp =  Convert.ToDouble(values[1]) });
+                        workoutModel.AccelerationValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = Convert.ToDouble(values[1]) });
                     }
                 }
                 tmp = workout.VelocityValues.Split(";");
@@ -100,7 +155,7 @@ namespace FitnessApp.Extensions
                     if (value != "")
                     {
                         var values = value.Split(",");
-                        workoutModel.VelocityValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp =  Convert.ToDouble(values[1]) });
+                        workoutModel.VelocityValues.Add(new TimedDouble() { Value = Convert.ToDouble(values[0]), Timestamp = Convert.ToDouble(values[1]) });
                     }
                 }
                 tmp = workout.TiltValues.Split(";");

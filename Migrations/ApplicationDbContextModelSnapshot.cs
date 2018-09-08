@@ -44,6 +44,8 @@ namespace FitnessApp.Migrations
 
                     b.Property<float>("Height");
 
+                    b.Property<bool>("IsProfessional");
+
                     b.Property<double>("Latitude");
 
                     b.Property<bool>("LockoutEnabled");
@@ -126,6 +128,31 @@ namespace FitnessApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Groups");
+                });
+
+            modelBuilder.Entity("FitnessApp.Data.Entities.OptimalWeight", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("FailCount");
+
+                    b.Property<int>("IncreaseCount");
+
+                    b.Property<DateTime?>("LastIncreaseDay");
+
+                    b.Property<int>("SuccessfullDays");
+
+                    b.Property<Guid>("TrainingId");
+
+                    b.Property<double>("Weight");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainingId")
+                        .IsUnique();
+
+                    b.ToTable("Weights");
                 });
 
             modelBuilder.Entity("FitnessApp.Data.Entities.Training", b =>
@@ -324,6 +351,14 @@ namespace FitnessApp.Migrations
                     b.HasOne("FitnessApp.Data.Entities.ApplicationUser", "TargetUser")
                         .WithMany()
                         .HasForeignKey("TargetUserId");
+                });
+
+            modelBuilder.Entity("FitnessApp.Data.Entities.OptimalWeight", b =>
+                {
+                    b.HasOne("FitnessApp.Data.Entities.Training", "Training")
+                        .WithOne("OptimalWeight")
+                        .HasForeignKey("FitnessApp.Data.Entities.OptimalWeight", "TrainingId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("FitnessApp.Data.Entities.Training", b =>

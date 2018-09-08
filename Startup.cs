@@ -112,12 +112,27 @@ namespace FitnessApp
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                // app.UseSwaggerUi(typeof(Startup).GetTypeInfo().Assembly, settings =>
+                // {
+                //     settings.GeneratorSettings.DefaultPropertyNameHandling =
+                //         PropertyNameHandling.CamelCase;
+
+                //     settings.GeneratorSettings.OperationProcessors.Add(new OperationSecurityScopeProcessor("JWT Token"));
+
+                //     settings.GeneratorSettings.DocumentProcessors.Add(new SecurityDefinitionAppender("JWT Token",
+                //         new SwaggerSecurityScheme
+                //         {
+                //             Type = SwaggerSecuritySchemeType.ApiKey,
+                //             Name = "Authorization",
+                //             Description = "Copy 'Bearer ' + valid JWT token into field",
+                //             In = SwaggerSecurityApiKeyLocation.Header
+                //         }));
+                // });
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-
 
             app.UseExceptionHandler(
                 builder =>
@@ -131,7 +146,7 @@ namespace FitnessApp
                             var error = context.Features.Get<IExceptionHandlerFeature>();
                             if (error != null)
                             {
-                                var result = new List<ErrorViewModel>() { new ErrorViewModel() {Code = "InternalServerError", Description = error.Error.Message}};
+                                var result = new List<ErrorViewModel>() { new ErrorViewModel() { Code = "InternalServerError", Description = error.Error.Message } };
                                 var json = JsonConvert.SerializeObject(result);
                                 await context.Response.WriteAsync(json);
                             }
@@ -141,23 +156,6 @@ namespace FitnessApp
             app.UseAuthentication();
             app.UseDefaultFiles();
             app.UseStaticFiles();
-
-            app.UseSwaggerUi(typeof(Startup).GetTypeInfo().Assembly, settings =>
-            {
-                settings.GeneratorSettings.DefaultPropertyNameHandling =
-                    PropertyNameHandling.CamelCase;
-                
-                settings.GeneratorSettings.OperationProcessors.Add(new OperationSecurityScopeProcessor("JWT Token"));
-
-                settings.GeneratorSettings.DocumentProcessors.Add(new SecurityDefinitionAppender("JWT Token",
-                    new SwaggerSecurityScheme
-                    {
-                        Type = SwaggerSecuritySchemeType.ApiKey,
-                        Name = "Authorization",
-                        Description = "Copy 'Bearer ' + valid JWT token into field",
-                        In = SwaggerSecurityApiKeyLocation.Header
-                    }));
-            });
 
             app.UseMvc(routes =>
             {

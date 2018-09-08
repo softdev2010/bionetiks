@@ -16,6 +16,7 @@ namespace FitnessApp.Data
         public DbSet<Workout> Workouts { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<Group> Groups { get; set; }
+        public DbSet<OptimalWeight> Weights { get; set; }
         public DbSet<UsersGroups> UsersGroups { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -32,6 +33,12 @@ namespace FitnessApp.Data
                 .HasOne(bc => bc.User)
                 .WithMany(c => c.Groups)
                 .HasForeignKey(bc => bc.UserId);
+            
+            builder.Entity<Training>()
+                .HasOne(x => x.OptimalWeight)
+                .WithOne(x => x.Training)
+                .HasForeignKey<OptimalWeight>(x => x.TrainingId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

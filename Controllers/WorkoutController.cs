@@ -25,17 +25,20 @@ namespace FitnessApp.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllWorkouts([FromQuery] bool includeWorkoutData = true)
+        public async Task<IActionResult> GetAllWorkouts([FromQuery] bool includeWorkoutData = true, [FromQuery] string id = null, [FromQuery]string workoutName = null)
         {
             try
             {
                 var workouts = await _context.Workouts
                     .Include(s => s.User)
                     .Include(s => s.Template)
+                    .Include(s => s.Template.OptimalWeight)
                     .AsNoTracking()
-                    .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value))
+                    .Where(t => id == null ? t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value): t.UserId.Equals(id))
                     .ToListAsync();
-
+                if(workoutName != null) {
+                    workouts = workouts.Where(x => x.Template.MuscleGroup.Equals(workoutName)).ToList();
+                }
                 return new OkObjectResult(workouts.Select(x => x.MapToWorkoutModel(includeWorkoutData)));
             }
             catch (Exception ex)
@@ -43,8 +46,24 @@ namespace FitnessApp.Controllers
                 throw ex;
             }
         }
+        [HttpGet("{muscleGroup}")]
+        public async Task<IActionResult> GetUserStatisticsByMuscleGroup(string muscleGroup="")
+        {
+            try {
+                var allWorkoutsByUser = await _context.Workouts
+                                                .Include(s => s.User)
+                                                .Include(s => s.Template)
+                                                .Include(s => s.Template.OptimalWeight)
+                                                .AsNoTracking()
+                                                .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) && t.Template.MuscleGroup.Equals(muscleGroup))
+                                                .ToListAsync();
+                return Ok(allWorkoutsByUser.Select(x=>x.MapToWorkoutModel(true)));
+            }catch(Exception ex) {
+                throw ex;
+            }
+        }
         [HttpPost("")]
-        public async Task<IActionResult> CreateWorkout([FromBody]WorkoutModel workoutModel)
+        public async Task<IActionResult> CreateWorkout([FromBody]CreateWorkoutModel workoutModel)
         {
             if (ModelState.IsValid)
             {
@@ -73,6 +92,7 @@ namespace FitnessApp.Controllers
             {
                 var trainings = await _context.Trainings
                     .Include(s => s.User)
+                    .Include(s => s.OptimalWeight)
                     .AsNoTracking()
                     .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) 
                         && t.IsRoutine && t.IsDeleted == false)
@@ -85,6 +105,23 @@ namespace FitnessApp.Controllers
                 throw ex;
             }
         }
+        [HttpGet("musclegroups")]
+        public async Task<IActionResult> GetAllMuscleGroups()
+        {
+            try
+            {
+                var trainings = await _context.Trainings
+                    .AsNoTracking()
+                    .ToListAsync();
+                var muscleGroups = trainings.Select(x => x.MuscleGroup).ToList();
+                return new OkObjectResult(muscleGroups.Distinct().ToList());
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
 
         [HttpGet("templates/{id}")]
         public async Task<IActionResult> GetById(string id)
@@ -112,7 +149,7 @@ namespace FitnessApp.Controllers
         }
 
         [HttpPost("templates")]
-        public async Task<IActionResult> CreateTrainingTemplate([FromBody]TrainingModel trainingModel)
+        public async Task<IActionResult> CreateTrainingTemplate([FromBody]CreateTrainingModel trainingModel)
         {
             try
             {
@@ -121,10 +158,16 @@ namespace FitnessApp.Controllers
                 training.User = await _context.Users
                                         .FirstOrDefaultAsync(x => x.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value));
                 training.UserId = training.User.Id;
+                training.OptimalWeight = new OptimalWeight() {
+                    FailCount = trainingModel.OptimalWeight != null ? trainingModel.OptimalWeight.FailCount : 0,
+                    IncreaseCount = trainingModel.OptimalWeight != null ? trainingModel.OptimalWeight.IncreaseCount : 0,
+                    LastIncreaseDay = trainingModel.OptimalWeight != null ? trainingModel.OptimalWeight.LastIncreaseDay : null,
+                    SuccessfullDays = trainingModel.OptimalWeight != null ? trainingModel.OptimalWeight.SuccessfullDays : 0,
+                    Weight = trainingModel.OptimalWeight != null ? trainingModel.OptimalWeight.Weight + 5 : trainingModel.Weight + 5
+                };
                 _context.Trainings.Add(training);
                 await _context.SaveChangesAsync();
-                trainingModel.Id = training.Id.ToString();
-                return new OkObjectResult(trainingModel);
+                return new OkObjectResult(training.MapToTrainingModel());
             }
             catch (Exception ex)
             {
@@ -137,13 +180,47 @@ namespace FitnessApp.Controllers
         {
             try
             {
-                var training = await _context.Trainings.FirstOrDefaultAsync(x => x.Id.ToString().Equals(trainingModel.Id));
+                var training = await _context.Trainings.Include(x=> x.OptimalWeight).FirstOrDefaultAsync(x => x.Id.ToString().Equals(trainingModel.Id));
                 training.IsRoutine = trainingModel.IsPersonalizedRoutine;
                 training.MuscleGroup = trainingModel.MuscleGroup;
-                training.Day = (Days)trainingModel.Day;
                 training.Weight = trainingModel.Weight;
+                training.Day = (Days)trainingModel.Day;
+                if(trainingModel.OptimalWeight != null) {
+                    training.OptimalWeight.FailCount = trainingModel.OptimalWeight.FailCount;
+                    training.OptimalWeight.IncreaseCount = trainingModel.OptimalWeight.IncreaseCount;
+                    training.OptimalWeight.LastIncreaseDay = trainingModel.OptimalWeight.LastIncreaseDay;
+                    training.OptimalWeight.SuccessfullDays = trainingModel.OptimalWeight.SuccessfullDays;
+                    training.OptimalWeight.Weight = trainingModel.OptimalWeight.Weight;
+                }
                 await _context.SaveChangesAsync();
                 return new OkObjectResult(training.MapToTrainingModel());
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        [HttpPut("templates/weigths/{id}")]
+        public async Task<IActionResult> UpdateTrainingTemplate([FromBody]UpdateWeight weightModel, string id)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(id) || string.IsNullOrWhiteSpace(id))
+                {
+                    return BadRequest();
+                }
+                var weight = await _context.Weights.FirstOrDefaultAsync(x => x.Id.ToString().Equals(id));
+                if(weight == null) {
+                    return NotFound();
+                }
+                weight.FailCount = weightModel.FailCount;
+                weight.IncreaseCount = weightModel.IncreaseCount;
+                weight.LastIncreaseDay = weightModel.LastIncreaseDay;
+                weight.SuccessfullDays = weightModel.SuccessfullDays;
+                weight.Weight = weightModel.Weight;
+                await _context.SaveChangesAsync();
+                return new NoContentResult();
             }
             catch (Exception ex)
             {

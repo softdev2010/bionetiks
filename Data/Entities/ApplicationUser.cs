@@ -22,8 +22,10 @@ namespace FitnessApp.Data.Entities
         public float Weight {get;set;}
         public string PictureUrl { get; set; }
         public bool ProfileComplete {get;set;}
+        public bool IsProfessional {get;set;}
         public bool Visibility {get;set;}
         public List<Training> Trainings {get;set;}
+        public List<Workout> Workouts {get;set;}
         public List<UsersGroups> Groups {get;set;}
     }
 }

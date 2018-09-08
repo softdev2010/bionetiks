@@ -36,10 +36,10 @@ namespace FitnessApp.Controllers
         private static readonly HttpClient Client = new HttpClient();
 
         public AccountController(
-            UserManager<ApplicationUser> userManager, 
-            ApplicationDbContext appDbContext, 
-            IJwtFactory jwtFactory, 
-            IOptions<JwtIssuerOptions> jwtOptions, 
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContext appDbContext,
+            IJwtFactory jwtFactory,
+            IOptions<JwtIssuerOptions> jwtOptions,
             IOptions<GoogleAuthModel> googleAuthOptions)
         {
             _userManager = userManager;
@@ -54,7 +54,7 @@ namespace FitnessApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Username, Email = model.Email, Gender = Gender.None, Visibility = true };
+                var user = new ApplicationUser { UserName = model.Username, Email = model.Email, Gender = Gender.None, Visibility = true, Nationality = "US" };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -65,7 +65,8 @@ namespace FitnessApp.Controllers
                 else
                 {
                     var duplicateUsername = result.Errors.FirstOrDefault(x => x.Code.Equals("DuplicateUserName"));
-                    if(duplicateUsername != null) {
+                    if (duplicateUsername != null)
+                    {
                         duplicateUsername.Description = "Username '" + user.UserName + "' is already taken.";
                     }
                     return new BadRequestObjectResult(result.Errors);
@@ -79,18 +80,20 @@ namespace FitnessApp.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]LoginModel credentials)
         {
-            if(credentials.Username == null) {
-                    return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "InvalidLogin", Description = "Username is required."}});
+            if (credentials.Username == null)
+            {
+                return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() { Code = "InvalidLogin", Description = "Username is required." } });
             }
 
-            if(credentials.Password == null) {
-                    return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "InvalidLogin", Description = "Password is required."}});
+            if (credentials.Password == null)
+            {
+                return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() { Code = "InvalidLogin", Description = "Password is required." } });
             }
 
             var identity = await GetClaimsIdentity(credentials.Username, credentials.Password);
             if (identity == null)
             {
-                    return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "InvalidLogin", Description = "Incorrect username or password."}});
+                return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() { Code = "InvalidLogin", Description = "Incorrect username or password." } });
             }
 
             var user = await _userManager.FindByNameAsync(credentials.Username);
@@ -104,11 +107,27 @@ namespace FitnessApp.Controllers
         public async Task<IActionResult> Facebook([FromBody]FacebookModel model)
         {
             var userInfo = new FacebookUserData();
-            try {
+            try
+            {
                 var userInfoResponse = await Client.GetStringAsync($"https://graph.facebook.com/v3.0/me?fields=id,email,first_name,last_name,gender,locale,birthday,picture&access_token={model.AccessToken}");
                 userInfo = JsonConvert.DeserializeObject<FacebookUserData>(userInfoResponse);
-            } catch(Exception ex) {
-                return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() {Code = "InvalidToken", Description = "Facebook token is not valid."}});
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new List<ErrorViewModel>() { new ErrorViewModel() { Code = "InvalidToken", Description = "Facebook token is not valid." } });
+            }
+            if (userInfo.Picture != null)
+            {
+                try
+                {
+                    var imageResponse = await Client.GetStringAsync($"https://graph.facebook.com/v3.0/{userInfo.Id}/picture?type=album&redirect=false");
+                    var image = JsonConvert.DeserializeObject<FacebookPictureData>(imageResponse);
+                    userInfo.Picture = image;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
             var existingUser = await _userManager.FindByEmailAsync(userInfo.Email);
             if (existingUser == null)
@@ -119,22 +138,27 @@ namespace FitnessApp.Controllers
                     Email = userInfo.Email,
                     UserName = userInfo.FirstName + userInfo.LastName,
                     PictureUrl = userInfo.Picture?.Data?.Url,
-                    Visibility = true
+                    Visibility = true,
+                    Nationality = "US"
                 };
 
-                if(userInfo.Gender != null)
+                if (userInfo.Gender != null)
                     user.Gender = userInfo.Gender.Equals("male") ? Gender.Male : userInfo.Gender.Equals("female") ? Gender.Female : Gender.Other;
-                else 
+                else
                     user.Gender = Gender.None;
-                if(userInfo.Birthday != DateTime.MinValue) {
-                    var dateOfBirth = new DateTime(day: userInfo.Birthday.Day, month: userInfo.Birthday.Month, year:DateTime.Now.Year);
-                    if(DateTime.Now >= dateOfBirth) {
+                if (userInfo.Birthday != DateTime.MinValue)
+                {
+                    var dateOfBirth = new DateTime(day: userInfo.Birthday.Day, month: userInfo.Birthday.Month, year: DateTime.Now.Year);
+                    if (DateTime.Now >= dateOfBirth)
+                    {
                         user.Age = DateTime.Now.Year - userInfo.Birthday.Year;
-                    } else {
+                    }
+                    else
+                    {
                         user.Age = DateTime.Now.Year - userInfo.Birthday.Year - 1;
                     }
                 }
-                 
+
                 user.UserName = UserExtensions.RemoveDiacritics(user.UserName);
                 var result = await _userManager.CreateAsync(user, Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Substring(0, 8));
                 if (!result.Succeeded) {
@@ -152,38 +176,43 @@ namespace FitnessApp.Controllers
         }
 
         [HttpPost("externalauth/google")]
-        public async Task<IActionResult> Google([FromBody] GoogleModel googleModel) {
-            var appAccessToken = new AppAccessToken(); 
-            var tokenResponse = await Client.PostAsync($"https://www.googleapis.com/oauth2/v4/token?code={googleModel.Code}&client_id={_googleAuthModel.ClientId}&client_secret={_googleAuthModel.ClientSecret}&redirect_uri=http://localhost/oauth2callback&grant_type=authorization_code", null); 
-            if(tokenResponse.StatusCode != HttpStatusCode.OK) { 
-                return new BadRequestObjectResult(new {code = "InvalidCode", description = tokenResponse.Content.ReadAsStringAsync().Result});// "Google authorization code is not valid."}); 
+        public async Task<IActionResult> Google([FromBody] GoogleModel googleModel)
+        {
+            var appAccessToken = new AppAccessToken();
+            var tokenResponse = await Client.PostAsync($"https://www.googleapis.com/oauth2/v4/token?code={googleModel.Code}&client_id={_googleAuthModel.ClientId}&client_secret={_googleAuthModel.ClientSecret}&redirect_uri=http://localhost/oauth2callback&grant_type=authorization_code", null);
+            if (tokenResponse.StatusCode != HttpStatusCode.OK)
+            {
+                return new BadRequestObjectResult(new { code = "InvalidCode", description = tokenResponse.Content.ReadAsStringAsync().Result });// "Google authorization code is not valid."}); 
             }
-            appAccessToken = JsonConvert.DeserializeObject<AppAccessToken>(tokenResponse.Content.ReadAsStringAsync().Result); 
-            var userResponse = await Client.GetStringAsync($"https://www.googleapis.com/oauth2/v2/userinfo?access_token={appAccessToken.AccessToken}"); 
-            var userInfo = JsonConvert.DeserializeObject<GoogleUserData>(userResponse); 
-            var existingUser = await _userManager.FindByEmailAsync(userInfo.Email); 
+            appAccessToken = JsonConvert.DeserializeObject<AppAccessToken>(tokenResponse.Content.ReadAsStringAsync().Result);
+            var userResponse = await Client.GetStringAsync($"https://www.googleapis.com/oauth2/v2/userinfo?access_token={appAccessToken.AccessToken}");
+            var userInfo = JsonConvert.DeserializeObject<GoogleUserData>(userResponse);
+            var existingUser = await _userManager.FindByEmailAsync(userInfo.Email);
             if (existingUser == null)
             {
                 var user = new ApplicationUser
-                { 
+                {
                     GoogleId = userInfo.Id,
                     Email = userInfo.Email,
                     UserName = userInfo.FirstName + userInfo.LastName,
                     PictureUrl = userInfo.Picture,
-                    Visibility = true
+                    Visibility = true,
+                    Nationality = "US"
                 };
-                if(userInfo.Gender != null)
+                if (userInfo.Gender != null)
                     user.Gender = userInfo.Gender.Equals("male") ? Gender.Male : userInfo.Gender.Equals("female") ? Gender.Female : Gender.Other;
-                else 
+                else
                     user.Gender = Gender.None;
 
                 user.UserName = UserExtensions.RemoveDiacritics(user.UserName);
                 var result = await _userManager.CreateAsync(user, Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Substring(0, 8));
-                if (!result.Succeeded) {
+                if (!result.Succeeded)
+                {
                     return new BadRequestObjectResult(result.Errors);
                 }
-                else {
-                    existingUser = await _userManager.FindByNameAsync(userInfo.Email);
+                else
+                {
+                    existingUser = await _userManager.FindByNameAsync(user.UserName);
                 }
             }
 

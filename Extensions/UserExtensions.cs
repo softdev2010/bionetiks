@@ -16,12 +16,51 @@ namespace FitnessApp.Extensions
         {
             var userModel = new UserModel()
             {
+                Id = user.Id,
                 Username = user.UserName,
                 Email = user.Email,
                 Nationality = user.Nationality,
+                Professional = user.IsProfessional,
                 Gender = user.Gender == Gender.None ? null : (user.Gender == Gender.Female ? "Female" : user.Gender == Gender.Male ? "Male" : "Other"),
                 ProfileImage = user.PictureUrl,
                 Visibility = user.Visibility
+            };
+            if (user.Age != 0)
+            {
+                userModel.Age = user.Age;
+            }
+            if (user.Height != 0)
+            {
+                userModel.Height = user.Height;
+            }
+            if (user.Weight != 0)
+            {
+                userModel.Weight = user.Weight;
+            }
+            if (user.Latitude != 0)
+            {
+                userModel.Latitude = user.Latitude;
+            }
+            if (user.Longitude != 0)
+            {
+                userModel.Longitude = user.Longitude;
+            }
+            return userModel;
+        }
+
+        public static LeaderboardUserModel MapToLeaderboardUserModel(this ApplicationUser user)
+        {
+            var userModel = new LeaderboardUserModel()
+            {
+                Id = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                Nationality = user.Nationality,
+                Professional = user.IsProfessional,
+                Gender = user.Gender == Gender.None ? null : (user.Gender == Gender.Female ? "Female" : user.Gender == Gender.Male ? "Male" : "Other"),
+                ProfileImage = user.PictureUrl,
+                Visibility = user.Visibility,
+                Workout = user.Workouts.First().MapToWorkoutModel(false)
             };
             if (user.Age != 0)
             {
@@ -58,6 +97,10 @@ namespace FitnessApp.Extensions
             if (profile.Nationality != null)
             {
                 user.Nationality = profile.Nationality;
+            }
+            if (profile.Professional != null)
+            {
+                user.IsProfessional = (bool)profile.Professional;
             }
             if (profile.Weight != 0)
             {
@@ -139,10 +182,10 @@ namespace FitnessApp.Extensions
                                                 x.Creator.UserName.Equals(username))) &&
                                                 x.State != RequestState.Denied)
                                         .ToListAsync().Result;
-
+                    user.FriendStatus = new FriendStatus();
                     if (friendStatuses.Count == 0)
                     {
-                        user.FriendStatus = FriendStatus.NotFriends;
+                        user.FriendStatus.State = FriendStatusState.NotFriends;
                     }
                     else
                     {
@@ -151,7 +194,8 @@ namespace FitnessApp.Extensions
                             x.TargetUser.UserName.Equals(username) && x.State == RequestState.Pending);
                         if (receivedRequestExists != null)
                         {
-                            user.FriendStatus = FriendStatus.FriendRequestReceived;
+                            user.FriendStatus.State = FriendStatusState.FriendRequestReceived;
+                            user.FriendStatus.RequestId = receivedRequestExists.Id.ToString();
                         }
                         else
                         {
@@ -160,16 +204,15 @@ namespace FitnessApp.Extensions
                                     x.Creator.UserName.Equals(username) && x.State == RequestState.Pending);
                             if (sentRequestExists != null)
                             {
-                                user.FriendStatus = FriendStatus.FriendRequestSent;
+                                user.FriendStatus.State = FriendStatusState.FriendRequestSent;
+                                user.FriendStatus.RequestId = sentRequestExists.Id.ToString();
                             }
                             else
                             {
-                                user.FriendStatus = FriendStatus.Friends;
+                                user.FriendStatus.State = FriendStatusState.Friends;
                             }
                         }
                     }
-                } else {
-                    user.FriendStatus = null;
                 }
             }
 
@@ -186,8 +229,12 @@ namespace FitnessApp.Extensions
                 Nationality = user.Nationality,
                 Gender = user.Gender == Gender.None ? null : (user.Gender == Gender.Female ? "Female" : user.Gender == Gender.Male ? "Male" : "Other"),
                 ProfileImage = user.PictureUrl,
+                Professional = user.IsProfessional,
                 Visibility = user.Visibility,
-                FriendStatus = (FriendStatus)state
+                FriendStatus = new FriendStatus()
+                {
+                    State = (FriendStatusState)state
+                }
             };
             if (user.Age != 0)
             {
@@ -226,5 +273,29 @@ namespace FitnessApp.Extensions
 
             return stringBuilder.ToString();
         }
+        public static double GetUserDistance(this ApplicationUser user, double lat1, double longt)
+        {
+            var lat2  = user.Latitude;
+            double theta = longt - user.Longitude;
+            double dist = Math.Sin(deg2rad(lat1)) * Math.Sin(deg2rad(lat2)) + Math.Cos(deg2rad(lat1)) * Math.Cos(deg2rad(lat2)) * Math.Cos(deg2rad(theta));
+            dist = Math.Acos(dist);
+            dist = rad2deg(dist);
+            dist = dist * 60 * 1.1515;
+            return dist;
+        }
+
+        private static double deg2rad(double deg)
+        {
+            return (deg * Math.PI / 180.0);
+        }
+
+        //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        //::  This function converts radians to decimal degrees             :::
+        //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        private static double rad2deg(double rad)
+        {
+            return (rad / Math.PI * 180.0);
+        }
+
     }
 }

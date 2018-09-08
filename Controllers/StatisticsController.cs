@@ -13,6 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Security.Claims;
 using FitnessApp.Extensions;
+using FitnessApp.Data.Entities;
+using System.Linq.Expressions;
 
 namespace FitnessApp.Controllers
 {
@@ -27,14 +29,20 @@ namespace FitnessApp.Controllers
             _context = context;
         }
         [HttpGet("")]
-        public async Task<IActionResult> GetUserStatistics()
+        public async Task<IActionResult> GetUserStatistics([FromQuery] string id = null)
         {
             try {
+                Expression<Func<Workout, bool>> condition = null;
+                if(id == null) {
+                    condition = t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
+                } else {
+                    condition = t  => t.User.Id.Equals(id);
+                }
                 var allWorkoutsByUser = await _context.Workouts
                                                 .Include(s => s.User)
                                                 .Include(s => s.Template)
                                                 .AsNoTracking()
-                                                .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value))
+                                                .Where(condition)
                                                 .Select(x => new { NumberOfRepetitions = x.NumberOfRepetitions, Muscle = x.Template.MuscleGroup })
                                                 .ToListAsync();
 
@@ -58,21 +66,6 @@ namespace FitnessApp.Controllers
                 }
 
                 return Ok(statisticsModel);
-            }catch(Exception ex) {
-                throw ex;
-            }
-        }
-        [HttpGet("{muscleGroup}")]
-        public async Task<IActionResult> GetUserStatisticsByMuscleGroup(string muscleGroup="")
-        {
-            try {
-                var allWorkoutsByUser = await _context.Workouts
-                                                .Include(s => s.User)
-                                                .Include(s => s.Template)
-                                                .AsNoTracking()
-                                                .Where(t => t.User.UserName.Equals(User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value) && t.Template.MuscleGroup.Equals(muscleGroup))
-                                                .ToListAsync();
-                return Ok(allWorkoutsByUser.Select(x=>x.MapToWorkoutModel()));
             }catch(Exception ex) {
                 throw ex;
             }
